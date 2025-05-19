@@ -17,10 +17,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] LayerMask groundLayer;
     [SerializeField] bool isGrounded;
 
+    [Header("Referencias")]
     // Referencias privadas:
     private Rigidbody playerRb;
     private Animator anim;
-    Vector2 moveInput;
+    [SerializeField] Vector2 moveInput;
     Vector2 lookInput;
     float lookRotation;
 
@@ -43,8 +44,9 @@ public class PlayerController : MonoBehaviour
 
     void Movement()
     {
-        Vector3 currentVelocity = playerRb.velocity; // Velocidad actual del player
-        Vector3 targetVelocity = new Vector3(moveInput.x, 0, moveInput.y); // Velocidad hacia la que queremos que se mueva el player
+        Vector3 currentVelocity = playerRb.velocity; // Velocidad actual del jugador.
+        Vector3 targetVelocity = new Vector3(moveInput.x, 0, moveInput.y); // Velocidad hacia la que queremos que se mueva el jugador.
+        targetVelocity *= speed; // Aplica la velocidad hacia la que queremos que se mueva el jugador.
 
         // Alinear la dirección con la orientación correcta (de local a global)
         targetVelocity = transform.TransformDirection(targetVelocity);
