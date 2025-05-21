@@ -17,11 +17,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] LayerMask groundLayer;
     [SerializeField] bool isGrounded;
 
-    [Header("Referencias")]
+    [Header("Light Stats")]
+    public bool canConcealLight;
+    public bool isLightConcealed;
+    [SerializeField] GameObject playerLight;
+    // Estados de luz:
+    public float unconcealedLight;
+    public float concealedLight;
+
     // Referencias privadas:
     private Rigidbody playerRb;
     private Animator anim;
-    [SerializeField] Vector2 moveInput;
+    Vector2 moveInput;
     Vector2 lookInput;
     float lookRotation;
 
@@ -30,6 +37,18 @@ public class PlayerController : MonoBehaviour
         playerRb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
         groundCheck = GameObject.Find("GroundCheck");
+        playerLight = GameObject.Find("PlayerLight");
+    }
+
+    private void Start()
+    {
+        // Estableze las variables de luz.
+        canConcealLight = true;
+        isLightConcealed = false;
+        unconcealedLight = 8;
+        concealedLight = 2;
+        playerLight.GetComponent<Light>().intensity = unconcealedLight * 2;
+        playerLight.GetComponent<Light>().range = unconcealedLight;   
     }
 
     private void Update()
@@ -73,6 +92,26 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void ConcealLight() // Cambia la intensidad de la luz.
+    {
+        canConcealLight = false;
+
+        if (isLightConcealed == false)
+        {
+            playerLight.GetComponent<Light>().intensity = concealedLight * 2;
+            playerLight.GetComponent<Light>().range = concealedLight;
+            isLightConcealed = true;
+        }
+        else
+        {
+            playerLight.GetComponent<Light>().intensity = unconcealedLight * 2;
+            playerLight.GetComponent<Light>().range = unconcealedLight;
+            isLightConcealed = false;
+        }
+
+        canConcealLight = true;
+    }
+
     #region Input Methods
 
     public void OnMove(InputAction.CallbackContext context)
@@ -85,6 +124,17 @@ public class PlayerController : MonoBehaviour
         if (context.performed)
         {
             Jump();
+        }
+    }
+
+    public void OnConcealLight(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            if (canConcealLight == true) 
+            {
+                ConcealLight();
+            }
         }
     }
 
