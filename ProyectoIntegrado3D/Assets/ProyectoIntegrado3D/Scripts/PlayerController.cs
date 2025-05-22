@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
@@ -8,6 +9,7 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Stats")]
     public float speed;
     public float maxForce = 1;
+    GameObject playerBody; // Parte visible del jugador
 
     [Header("Jump Stats")]
     public float jumpForce;
@@ -20,7 +22,7 @@ public class PlayerController : MonoBehaviour
     [Header("Light Stats")]
     public bool canConcealLight;
     public bool isLightConcealed;
-    [SerializeField] GameObject playerLight;
+    GameObject playerLight;
     // Estados de luz:
     public float unconcealedLight;
     public float concealedLight;
@@ -38,6 +40,7 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
         groundCheck = GameObject.Find("GroundCheck");
         playerLight = GameObject.Find("PlayerLight");
+        playerBody = GameObject.Find("Body");
     }
 
     private void Start()
@@ -54,6 +57,8 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         GroundCheck();
+
+        RotateBody();
     }
 
     private void FixedUpdate()
@@ -79,6 +84,11 @@ public class PlayerController : MonoBehaviour
         playerRb.AddForce(velocityChange, ForceMode.VelocityChange);
     }
 
+    void RotateBody()
+    {
+        
+    }
+
     void GroundCheck()
     {
         isGrounded = Physics.CheckSphere(groundCheck.transform.position, groundCheckRadious, groundLayer);
@@ -95,19 +105,16 @@ public class PlayerController : MonoBehaviour
     void ConcealLight() // Cambia la intensidad de la luz.
     {
         canConcealLight = false;
+        
+        isLightConcealed = !isLightConcealed;
 
-        if (isLightConcealed == false)
-        {
-            playerLight.GetComponent<Light>().intensity = concealedLight * 2;
-            playerLight.GetComponent<Light>().range = concealedLight;
-            isLightConcealed = true;
-        }
-        else
-        {
-            playerLight.GetComponent<Light>().intensity = unconcealedLight * 2;
-            playerLight.GetComponent<Light>().range = unconcealedLight;
-            isLightConcealed = false;
-        }
+        playerLight.GetComponent<Light>().range = isLightConcealed ? // Cambia la variable dependiendo si el booleano es "true" o "false".
+            concealedLight : // Le da este valor a la variable si es "true".
+            unconcealedLight ; // Le da este valor a la variable si es "false".
+
+        playerLight.GetComponent<Light>().intensity = isLightConcealed ?
+            concealedLight * 2 :
+            unconcealedLight * 2 ;
 
         canConcealLight = true;
     }
