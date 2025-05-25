@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Stats")]
     public float speed;
     public float maxForce = 1;
-    GameObject playerBody; // Parte visible del jugador
+    [SerializeField] GameObject playerBody; // Cuerpo del jugador AKA Parte visible del jugador
+    [SerializeField] float rotationSpeed;
 
     [Header("Jump Stats")]
     public float jumpForce;
@@ -37,7 +39,7 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         playerRb = GetComponent<Rigidbody>();
-        anim = GetComponent<Animator>();
+        anim = GameObject.Find("Body").GetComponent<Animator>();
         groundCheck = GameObject.Find("GroundCheck");
         playerLight = GameObject.Find("PlayerLight");
         playerBody = GameObject.Find("Body");
@@ -48,9 +50,7 @@ public class PlayerController : MonoBehaviour
         // Estableze las variables de luz.
         canConcealLight = true;
         isLightConcealed = false;
-        unconcealedLight = 8;
-        concealedLight = 2;
-        playerLight.GetComponent<Light>().intensity = unconcealedLight * 2;
+        playerLight.GetComponent<Light>().intensity = unconcealedLight * 1;
         playerLight.GetComponent<Light>().range = unconcealedLight;   
     }
 
@@ -58,7 +58,14 @@ public class PlayerController : MonoBehaviour
     {
         GroundCheck();
 
-        RotateBody();
+        // Previene que el cuerpo del jugador rote verticalmente
+        playerBody.transform.eulerAngles = new Vector3(0, playerBody.transform.eulerAngles.y, 0);
+
+        if (transform.position.y < -5)
+        {
+            var currentScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(currentScene.name);
+        }
     }
 
     private void FixedUpdate()
@@ -82,11 +89,14 @@ public class PlayerController : MonoBehaviour
 
         // Aplicamos el movimiento
         playerRb.AddForce(velocityChange, ForceMode.VelocityChange);
-    }
 
-    void RotateBody()
-    {
-        
+        // Rotacion del cuerpo
+        if (currentVelocity != Vector3.zero)
+        {
+            Quaternion toRotation = Quaternion.LookRotation(currentVelocity, Vector3.up);
+
+            playerBody.transform.rotation = Quaternion.RotateTowards(playerBody.transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
+        }
     }
 
     void GroundCheck()
@@ -113,10 +123,18 @@ public class PlayerController : MonoBehaviour
             unconcealedLight ; // Le da este valor a la variable si es "false".
 
         playerLight.GetComponent<Light>().intensity = isLightConcealed ?
-            concealedLight * 2 :
-            unconcealedLight * 2 ;
+            concealedLight * 1 :
+            unconcealedLight * 1 ;
 
         canConcealLight = true;
+    }
+
+    private void OnTriggerEnter(Collider collision)
+    {
+        if (collision.gameObject.CompareTag("Finish"))
+        {
+            SceneManager.LoadScene("MainMenu");
+        }
     }
 
     #region Input Methods
@@ -124,6 +142,15 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+
+        if (context.performed)
+        {
+            anim.SetBool("IsRunning", true);
+        }
+        else
+        {
+            anim.SetBool("IsRunning", false);
+        }
     }
 
     public void OnJump(InputAction.CallbackContext context)
